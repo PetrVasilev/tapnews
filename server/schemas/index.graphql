@@ -1,0 +1,16 @@
+scalar DateTime
+
+type News {
+  _id: String!
+  title: String
+  image: String
+  created: DateTime
+  content: String
+  audio: String
+  source: String
+  url: String
+}
+
+type Query {
+  news: [News]
+}
