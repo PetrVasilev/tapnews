@@ -11,13 +11,84 @@ module.exports = async () => {
   if (news.length > 0) return
 
   const parser = new Parser()
-  const [ysia, lenta, vcru] = await Promise.all([
+  const [
+    ysiaActual,
+    ysiaEconomika,
+    ysiaSport,
+    ysiaPolitika,
+    vcruActual,
+    vcruFinance,
+    vcruTech,
+    vcruLife,
+    lentaActual,
+    lentaTravel,
+    lentaRussia
+  ] = await Promise.all([
     parser.parseURL('http://ysia.ru/feed/'),
-    parser.parseURL('https://lenta.ru/rss/last24'),
-    parser.parseURL('https://vc.ru/rss')
+    parser.parseURL('http://ysia.ru/category/ekonomika/feed/'),
+    parser.parseURL('http://ysia.ru/category/sport/feed/'),
+    parser.parseURL('http://ysia.ru/category/politika/feed/'),
+    parser.parseURL('https://vc.ru/rss'),
+    parser.parseURL('https://vc.ru/rss/finance'),
+    parser.parseURL('https://vc.ru/rss/tech'),
+    parser.parseURL('https://vc.ru/rss/life'),
+    parser.parseURL('https://lenta.ru/rss'),
+    parser.parseURL('https://lenta.ru/rss/articles/travel/'),
+    parser.parseURL('https://lenta.ru/rss/news/russia/')
   ])
 
-  const data = [...ysia.items, ...lenta.items, ...vcru.items]
+  const ysia = [
+    ...ysiaActual.items.slice(0, 3).map(item => {
+      item.source = 'ysia-actual'
+      return item
+    }),
+    ...ysiaEconomika.items.slice(0, 3).map(item => {
+      item.source = 'ysia-economika'
+      return item
+    }),
+    ...ysiaSport.items.slice(0, 3).map(item => {
+      item.source = 'ysia-sport'
+      return item
+    }),
+    ...ysiaPolitika.items.slice(0, 3).map(item => {
+      item.source = 'ysia-politika'
+      return item
+    })
+  ]
+  const vcru = [
+    ...vcruActual.items.slice(0, 3).map(item => {
+      item.source = 'vcru-actual'
+      return item
+    }),
+    ...vcruFinance.items.slice(0, 3).map(item => {
+      item.source = 'vcru-finance'
+      return item
+    }),
+    ...vcruTech.items.slice(0, 3).map(item => {
+      item.source = 'vcru-tech'
+      return item
+    }),
+    ...vcruLife.items.slice(0, 3).map(item => {
+      item.source = 'vcru-life'
+      return item
+    })
+  ]
+  const lenta = [
+    ...lentaActual.items.slice(0, 3).map(item => {
+      item.source = 'lenta-actual'
+      return item
+    }),
+    ...lentaRussia.items.slice(0, 3).map(item => {
+      item.source = 'lenta-russia'
+      return item
+    }),
+    ...lentaTravel.items.slice(0, 3).map(item => {
+      item.source = 'lenta-travel'
+      return item
+    })
+  ]
+
+  const data = [...ysia, ...vcru, ...lenta]
   const parsingLoading = new _cliProgress.SingleBar(
     {},
     _cliProgress.Presets.shades_classic
@@ -61,7 +132,6 @@ module.exports = async () => {
         }
       ]
     })
-    const sourceURL = new URL(item.link)
     const content = result.contentArr
       .filter(a => a)
       .join('\n')
@@ -71,7 +141,7 @@ module.exports = async () => {
     const doc = {
       title: item.title,
       created: item.isoDate,
-      source: sourceURL.hostname,
+      source: item.source,
       url: item.link,
       image: _image ? _image : item.enclosure ? item.enclosure.url : null,
       content
